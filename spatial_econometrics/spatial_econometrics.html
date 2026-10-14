@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Neena Abimbola Albarus">
+
+<title>Spatial Econometrics and Geographic Clustering</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="spatial_econometrics_files/libs/clipboard/clipboard.min.js"></script>
+<script src="spatial_econometrics_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="spatial_econometrics_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="spatial_econometrics_files/libs/quarto-html/popper.min.js"></script>
+<script src="spatial_econometrics_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="spatial_econometrics_files/libs/quarto-html/anchor.min.js"></script>
+<link href="spatial_econometrics_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="spatial_econometrics_files/libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="spatial_econometrics_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="spatial_econometrics_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="spatial_econometrics_files/libs/bootstrap/bootstrap-c2e55264ed47ce3b2e0326a2269f9400.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#theoretical-foundations-and-methodological-overview" id="toc-theoretical-foundations-and-methodological-overview" class="nav-link active" data-scroll-target="#theoretical-foundations-and-methodological-overview">1. Theoretical Foundations and Methodological Overview</a></li>
+  <li><a href="#data-pipeline-and-synthetic-spatial-construct" id="toc-data-pipeline-and-synthetic-spatial-construct" class="nav-link" data-scroll-target="#data-pipeline-and-synthetic-spatial-construct">2. Data Pipeline and Synthetic Spatial Construct</a></li>
+  <li><a href="#spatial-weight-matrix-and-morans-i-test" id="toc-spatial-weight-matrix-and-morans-i-test" class="nav-link" data-scroll-target="#spatial-weight-matrix-and-morans-i-test">3. Spatial Weight Matrix and Moran’s I Test</a></li>
+  <li><a href="#spatial-econometric-model-estimation" id="toc-spatial-econometric-model-estimation" class="nav-link" data-scroll-target="#spatial-econometric-model-estimation">4. Spatial Econometric Model Estimation</a></li>
+  <li><a href="#diagnostic-visualizations" id="toc-diagnostic-visualizations" class="nav-link" data-scroll-target="#diagnostic-visualizations">5. Diagnostic Visualizations</a>
+  <ul class="collapse">
+  <li><a href="#figure-1-moran-scatterplot" id="toc-figure-1-moran-scatterplot" class="nav-link" data-scroll-target="#figure-1-moran-scatterplot">Figure 1: Moran Scatterplot</a></li>
+  <li><a href="#figure-2-geographic-distribution-map" id="toc-figure-2-geographic-distribution-map" class="nav-link" data-scroll-target="#figure-2-geographic-distribution-map">Figure 2: Geographic Distribution Map</a></li>
+  <li><a href="#figure-3-ols-residual-spatial-mapping" id="toc-figure-3-ols-residual-spatial-mapping" class="nav-link" data-scroll-target="#figure-3-ols-residual-spatial-mapping">Figure 3: OLS Residual Spatial Mapping</a></li>
+  </ul></li>
+  <li><a href="#putting-it-all-together" id="toc-putting-it-all-together" class="nav-link" data-scroll-target="#putting-it-all-together">6. Putting It All Together</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Spatial Econometrics and Geographic Clustering</h1>
+<p class="subtitle lead">Spatial Autocorrelation, Distance Weight Matrices, SAR and SEM Models</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Neena Abimbola Albarus </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="theoretical-foundations-and-methodological-overview" class="level2">
+<h2 class="anchored" data-anchor-id="theoretical-foundations-and-methodological-overview">1. Theoretical Foundations and Methodological Overview</h2>
+<p>Standard econometric models assume that observational units are independent of one another. In geographic data, that assumption fails almost immediately. Countries that share borders tend to have similar levels of economic development, similar public health outcomes, and similar institutional arrangements, because they trade with each other, share ecosystems, and often imitate each other’s policies. This spatial dependence violates the independence assumption and biases standard errors if ignored.</p>
+<p>The central tool for diagnosing spatial dependence is <strong>Moran’s I</strong>, a global measure of spatial autocorrelation. A positive Moran’s I means nearby units have similar values, which is called clustering. A negative Moran’s I means nearby units have dissimilar values, which is called dispersion. A Moran’s I near zero means values are randomly distributed in space. Once we detect spatial autocorrelation, we need models that explicitly incorporate it.</p>
+<p>Two models dominate the spatial econometrics literature. The <strong>Spatial Autoregressive model</strong> (SAR), also called the spatial lag model, assumes that the outcome in one unit depends directly on the outcomes of its neighbors. The <strong>Spatial Error Model</strong> (SEM) assumes that the unobserved shocks affecting the outcome are spatially correlated, meaning what the model fails to explain is itself clustered in space. These two models reflect different theoretical stories about how spatial dependence operates.</p>
+<p>In this workbook, we construct a synthetic spatial cross section from the OWID panel, build a k nearest neighbors weight matrix, test for spatial autocorrelation in life expectancy, and compare OLS, SAR, and SEM specifications.</p>
+<blockquote class="blockquote">
+<p><strong>⚠️ Common Pitfalls</strong></p>
+<ul>
+<li><strong>Ignoring spatial autocorrelation in the residuals.</strong> If the residuals from your OLS regression are spatially clustered, your standard errors are wrong and your inferences are unreliable, even if your coefficients happen to be unbiased.</li>
+<li><strong>Confusing the SAR and SEM stories.</strong> The SAR model says neighbors’ outcomes affect your outcome. The SEM model says unobserved shocks affect neighboring units simultaneously. These are different mechanisms and call for different interpretations.</li>
+<li><strong>Choosing the weight matrix carelessly.</strong> The choice between k nearest neighbors, distance thresholds, and contiguity is substantive, not arbitrary. Different weight matrices can produce different results on the same data.</li>
+</ul>
+</blockquote>
+</section>
+<section id="data-pipeline-and-synthetic-spatial-construct" class="level2">
+<h2 class="anchored" data-anchor-id="data-pipeline-and-synthetic-spatial-construct">2. Data Pipeline and Synthetic Spatial Construct</h2>
+<p>Before any spatial analysis, we need geographic coordinates for each observational unit. The OWID panel does not include them, so we generate a synthetic coordinate grid so that the spatial estimators have something to work with. In a real analysis, you would join country polygons from Natural Earth on the ISO codes.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Dynamic path resolution across common working directories</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>possible_paths <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"../data/life_expectancy_data.csv"</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"data/life_expectancy_data.csv"</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"../../data/life_expectancy_data.csv"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"/Users/yawdgyal/Desktop/R for github/data/life_expectancy_data.csv"</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"/Users/yawdgyal/Desktop/R for github/workbooks/data/life_expectancy_data.csv"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>data_path <span class="ot">&lt;-</span> possible_paths[<span class="fu">file.exists</span>(possible_paths)][<span class="dv">1</span>]</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is.na</span>(data_path) <span class="sc">||</span> <span class="fu">length</span>(data_path) <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stop</span>(</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Could not locate 'life_expectancy_data.csv'. "</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Searched the following paths:</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste</span>(possible_paths, <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Loading data from: "</span>, data_path)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>owid_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(data_path, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="st">"Entity"</span> <span class="sc">%in%</span> <span class="fu">names</span>(owid_raw)) {</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  owid_df <span class="ot">&lt;-</span> owid_raw <span class="sc">%&gt;%</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename</span>(</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">country  =</span> Entity,</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">code     =</span> Code,</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">year     =</span> Year,</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>      <span class="at">life_exp =</span> <span class="st">`</span><span class="at">Life expectancy</span><span class="st">`</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  owid_df <span class="ot">&lt;-</span> owid_df <span class="sc">%&gt;%</span> <span class="fu">rename_with</span>(tolower)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="co"># Construct a synthetic spatial cross section for the year 2015</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>spatial_df <span class="ot">&lt;-</span> owid_df <span class="sc">%&gt;%</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(code), <span class="sc">!</span><span class="fu">is.na</span>(life_exp), year <span class="sc">==</span> <span class="dv">2015</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">longitude =</span> <span class="fu">runif</span>(<span class="fu">n</span>(), <span class="at">min =</span> <span class="sc">-</span><span class="dv">120</span>, <span class="at">max =</span> <span class="dv">120</span>),</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">latitude  =</span> <span class="fu">runif</span>(<span class="fu">n</span>(), <span class="at">min =</span> <span class="sc">-</span><span class="dv">40</span>, <span class="at">max =</span> <span class="dv">60</span>),</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">gdp_pc    =</span> <span class="fu">pmax</span>(<span class="dv">500</span>, <span class="fu">rnorm</span>(<span class="fu">n</span>(), <span class="at">mean =</span> <span class="dv">15000</span>, <span class="at">sd =</span> <span class="dv">9000</span>)),</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_gdp   =</span> <span class="fu">log</span>(gdp_pc)</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>()</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert to sf object</span></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>sf_data <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>  spatial_df,</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>  <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"longitude"</span>, <span class="st">"latitude"</span>),</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>  <span class="at">crs =</span> <span class="dv">4326</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(sf_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 246
+Columns: 7
+$ country  &lt;chr&gt; "Afghanistan", "Africa", "Albania", "Algeria", "American Samo…
+$ code     &lt;chr&gt; "AFG", "OWID_AFR", "ALB", "DZA", "ASM", "AND", "AGO", "AIA", …
+$ year     &lt;dbl&gt; 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2…
+$ life_exp &lt;dbl&gt; 62.2695, 60.8437, 78.3580, 75.1589, 72.6543, 84.5316, 61.0420…
+$ gdp_pc   &lt;dbl&gt; 16246.516, 5368.856, 26124.559, 10141.709, 12333.940, 21193.9…
+$ log_gdp  &lt;dbl&gt; 9.695634, 8.588370, 10.170631, 9.224412, 9.420110, 9.961472, …
+$ geometry &lt;POINT [°]&gt; POINT (47.68163 41.51261), POINT (13.56732 -8.313958), …</code></pre>
+</div>
+</div>
+<p><strong>What is happening here:</strong> The <code>possible_paths</code> vector lets the workbook run from multiple working directories. We read the OWID CSV, defensively rename its columns, and filter to the year 2015 to produce a single cross section. Because the OWID file does not contain coordinates, we generate synthetic longitude and latitude values with <code>runif()</code> and a synthetic GDP variable with <code>rnorm()</code>. The <code>st_as_sf()</code> call converts the plain data frame into a simple features object, which is the spatial class that every function in the <code>sf</code> and <code>spdep</code> ecosystems expects. In a real project, you would replace the synthetic coordinates with actual country centroids joined from a shapefile.</p>
+<blockquote class="blockquote">
+<p><strong>⚠️ Common Pitfalls</strong></p>
+<ul>
+<li><strong>Using synthetic coordinates for substantive conclusions.</strong> The synthetic coordinate grid produces a spatial pattern that has no relationship to actual geography. Every spatial statistic computed here is a demonstration of the workflow, not a real finding.</li>
+<li><strong>Forgetting to set a coordinate reference system.</strong> The <code>crs = 4326</code> argument specifies WGS 84, the standard latitude longitude system. Omitting it will cause problems when you try to compute distances or join with real shapefiles.</li>
+<li><strong>Ignoring missing values in the coordinate columns.</strong> Countries that fail to match or have missing life expectancy are silently dropped by <code>drop_na()</code>. Always report how many units remain after filtering.</li>
+</ul>
+</blockquote>
+</section>
+<section id="spatial-weight-matrix-and-morans-i-test" class="level2">
+<h2 class="anchored" data-anchor-id="spatial-weight-matrix-and-morans-i-test">3. Spatial Weight Matrix and Moran’s I Test</h2>
+<p>The spatial weight matrix <strong>W</strong> encodes which units are neighbors and how strongly they influence each other. The most common approaches are contiguity, meaning units that share a border are neighbors, distance thresholds, meaning units within a certain distance are neighbors, and k nearest neighbors, meaning each unit’s k closest units are neighbors. We use k nearest neighbors here because it works for any set of coordinates and produces a well behaved weight matrix even when points are irregularly spaced.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Build k nearest neighbors graph with k = 5</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>coords <span class="ot">&lt;-</span> <span class="fu">st_coordinates</span>(sf_data)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>knn_nb <span class="ot">&lt;-</span> <span class="fu">knearneigh</span>(coords, <span class="at">k =</span> <span class="dv">5</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>nb     <span class="ot">&lt;-</span> <span class="fu">knn2nb</span>(knn_nb)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Row standardized spatial weights matrix</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>spatial_weights <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(nb, <span class="at">style =</span> <span class="st">"W"</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Global Moran's I test for spatial autocorrelation in life expectancy</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>moran_test <span class="ot">&lt;-</span> <span class="fu">moran.test</span>(sf_data<span class="sc">$</span>life_exp, spatial_weights)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(moran_test)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Moran I test under randomisation
+
+data:  sf_data$life_exp  
+weights: spatial_weights    
+
+Moran I statistic standard deviate = 0.064739, p-value = 0.4742
+alternative hypothesis: greater
+sample estimates:
+Moran I statistic       Expectation          Variance 
+     -0.001650833      -0.004081633       0.001409835 </code></pre>
+</div>
+</div>
+<p><strong>What is happening here:</strong> The <code>st_coordinates()</code> function extracts the longitude and latitude of each observation from the <code>sf</code> object. The <code>knearneigh()</code> function identifies the 5 nearest neighbors of each unit, and <code>knn2nb()</code> converts that into a neighbor list object. The <code>nb2listw()</code> call turns the neighbor list into a row standardized spatial weights matrix, where each row sums to 1, so the spatial lag of a variable is the average of its neighbors’ values. The <code>moran.test()</code> function then computes the global Moran’s I statistic for life expectancy along with a p value testing whether the observed spatial pattern is significantly different from random.</p>
+<blockquote class="blockquote">
+<p><strong>⚠️ Common Pitfalls</strong></p>
+<ul>
+<li><strong>Choosing k arbitrarily.</strong> The choice of k changes the weight matrix and can change the results. Always report why you chose a particular k and consider running sensitivity checks with different values.</li>
+<li><strong>Forgetting to row standardize.</strong> A non standardized weight matrix causes the spatial lag term to scale with the number of neighbors, which makes interpretation difficult and can destabilize the model.</li>
+<li><strong>Interpreting Moran’s I as a causal statistic.</strong> Moran’s I tells you about spatial pattern, not about why the pattern exists. Spatial clustering is consistent with many different mechanisms, including common shocks, spillovers, and sorting.</li>
+</ul>
+</blockquote>
+</section>
+<section id="spatial-econometric-model-estimation" class="level2">
+<h2 class="anchored" data-anchor-id="spatial-econometric-model-estimation">4. Spatial Econometric Model Estimation</h2>
+<p>With the weight matrix in hand, we can estimate three nested models. The baseline OLS ignores spatial structure entirely. The SAR model adds a spatial lag of the outcome as a regressor. The SEM model allows the errors to be spatially correlated.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Baseline OLS</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>mod_ols <span class="ot">&lt;-</span> <span class="fu">lm</span>(life_exp <span class="sc">~</span> log_gdp, <span class="at">data =</span> sf_data)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Spatial Autoregressive (SAR) model with rho * W * Y</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>mod_sar <span class="ot">&lt;-</span> <span class="fu">lagsarlm</span>(</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  life_exp <span class="sc">~</span> log_gdp,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">data  =</span> sf_data,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">listw =</span> spatial_weights</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Spatial Error Model (SEM) with lambda * W * u</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>mod_sem <span class="ot">&lt;-</span> <span class="fu">errorsarlm</span>(</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  life_exp <span class="sc">~</span> log_gdp,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">data  =</span> sf_data,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">listw =</span> spatial_weights</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="fu">modelsummary</span>(</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Baseline OLS"</span>        <span class="ot">=</span> mod_ols,</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Spatial Lag SAR"</span>     <span class="ot">=</span> mod_sar,</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Spatial Error SEM"</span>   <span class="ot">=</span> mod_sem</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">stars =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">gof_omit =</span> <span class="st">"IC|Log|F"</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script>
+
+    <script>
+      // Create table-specific functions using external factory
+      const tableFns_je4qcx5ewqxu6zblx454 = TinyTable.createTableFunctions("tinytable_je4qcx5ewqxu6zblx454");
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '12', j: 2 }, { i: '12', j: 3 }, { i: '12', j: 4 } ], css_id: 'tinytable_css_s1cntgq3uy6d5lfqaylo',}, 
+          { positions: [ { i: '8', j: 2 }, { i: '8', j: 3 }, { i: '8', j: 4 } ], css_id: 'tinytable_css_ztnbom3yv0wkz53nu7lz',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '4', j: 2 }, { i: '5', j: 2 }, { i: '6', j: 2 }, { i: '7', j: 2 }, { i: '9', j: 2 }, { i: '10', j: 2 }, { i: '11', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '4', j: 3 }, { i: '5', j: 3 }, { i: '6', j: 3 }, { i: '7', j: 3 }, { i: '9', j: 3 }, { i: '10', j: 3 }, { i: '11', j: 3 }, { i: '1', j: 4 }, { i: '2', j: 4 }, { i: '3', j: 4 }, { i: '4', j: 4 }, { i: '5', j: 4 }, { i: '6', j: 4 }, { i: '7', j: 4 }, { i: '9', j: 4 }, { i: '10', j: 4 }, { i: '11', j: 4 } ], css_id: 'tinytable_css_6u9nc5buye2sr2e8f3l6',}, 
+          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 }, { i: '0', j: 4 } ], css_id: 'tinytable_css_11rg3r5povssnrw55xat',}, 
+          { positions: [ { i: '12', j: 1 } ], css_id: 'tinytable_css_ulhuqdpgqdcnvmwdvukq',}, 
+          { positions: [ { i: '8', j: 1 } ], css_id: 'tinytable_css_vgp4iiidkhm3p46bh5gu',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '4', j: 1 }, { i: '5', j: 1 }, { i: '6', j: 1 }, { i: '7', j: 1 }, { i: '9', j: 1 }, { i: '10', j: 1 }, { i: '11', j: 1 } ], css_id: 'tinytable_css_oqdto3hkvlvfdrftpwgs',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_74y6hllijywpbrh94aq5',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  tableFns_je4qcx5ewqxu6zblx454.styleCell(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
+    <style>
+    /* tinytable css entries after */
+    #tinytable_je4qcx5ewqxu6zblx454 td.tinytable_css_s1cntgq3uy6d5lfqaylo, #tinytable_je4qcx5ewqxu6zblx454 th.tinytable_css_s1cntgq3uy6d5lfqaylo {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_je4qcx5ewqxu6zblx454 td.tinytable_css_ztnbom3yv0wkz53nu7lz, #tinytable_je4qcx5ewqxu6zblx454 th.tinytable_css_ztnbom3yv0wkz53nu7lz {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_je4qcx5ewqxu6zblx454 td.tinytable_css_6u9nc5buye2sr2e8f3l6, #tinytable_je4qcx5ewqxu6zblx454 th.tinytable_css_6u9nc5buye2sr2e8f3l6 { text-align: center }
+    #tinytable_je4qcx5ewqxu6zblx454 td.tinytable_css_11rg3r5povssnrw55xat, #tinytable_je4qcx5ewqxu6zblx454 th.tinytable_css_11rg3r5povssnrw55xat {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_je4qcx5ewqxu6zblx454 td.tinytable_css_ulhuqdpgqdcnvmwdvukq, #tinytable_je4qcx5ewqxu6zblx454 th.tinytable_css_ulhuqdpgqdcnvmwdvukq {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_je4qcx5ewqxu6zblx454 td.tinytable_css_vgp4iiidkhm3p46bh5gu, #tinytable_je4qcx5ewqxu6zblx454 th.tinytable_css_vgp4iiidkhm3p46bh5gu {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_je4qcx5ewqxu6zblx454 td.tinytable_css_oqdto3hkvlvfdrftpwgs, #tinytable_je4qcx5ewqxu6zblx454 th.tinytable_css_oqdto3hkvlvfdrftpwgs { text-align: left }
+    #tinytable_je4qcx5ewqxu6zblx454 td.tinytable_css_74y6hllijywpbrh94aq5, #tinytable_je4qcx5ewqxu6zblx454 th.tinytable_css_74y6hllijywpbrh94aq5 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    </style>
+    <div class="container">
+      <table class="tinytable" id="tinytable_je4qcx5ewqxu6zblx454" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+        
+        <thead>
+              <tr>
+                <th scope="col" data-row="0" data-col="1"> </th>
+                <th scope="col" data-row="0" data-col="2">Baseline OLS</th>
+                <th scope="col" data-row="0" data-col="3">Spatial Lag SAR</th>
+                <th scope="col" data-row="0" data-col="4">Spatial Error SEM</th>
+              </tr>
+        </thead>
+        <tfoot><tr><td colspan="4">+ p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</td></tr></tfoot>
+        <tbody>
+                <tr>
+                  <td data-row="1" data-col="1">(Intercept)</td>
+                  <td data-row="1" data-col="2">66.550***</td>
+                  <td data-row="1" data-col="3">65.910***</td>
+                  <td data-row="1" data-col="4">66.399***</td>
+                </tr>
+                <tr>
+                  <td data-row="2" data-col="1"></td>
+                  <td data-row="2" data-col="2">(4.312)</td>
+                  <td data-row="2" data-col="3">(8.809)</td>
+                  <td data-row="2" data-col="4">(4.295)</td>
+                </tr>
+                <tr>
+                  <td data-row="3" data-col="1">log_gdp</td>
+                  <td data-row="3" data-col="2">0.638</td>
+                  <td data-row="3" data-col="3">0.641</td>
+                  <td data-row="3" data-col="4">0.655</td>
+                </tr>
+                <tr>
+                  <td data-row="4" data-col="1"></td>
+                  <td data-row="4" data-col="2">(0.460)</td>
+                  <td data-row="4" data-col="3">(0.458)</td>
+                  <td data-row="4" data-col="4">(0.458)</td>
+                </tr>
+                <tr>
+                  <td data-row="5" data-col="1">rho</td>
+                  <td data-row="5" data-col="2"></td>
+                  <td data-row="5" data-col="3">0.008</td>
+                  <td data-row="5" data-col="4"></td>
+                </tr>
+                <tr>
+                  <td data-row="6" data-col="1"></td>
+                  <td data-row="6" data-col="2"></td>
+                  <td data-row="6" data-col="3">(0.106)</td>
+                  <td data-row="6" data-col="4"></td>
+                </tr>
+                <tr>
+                  <td data-row="7" data-col="1">lambda</td>
+                  <td data-row="7" data-col="2"></td>
+                  <td data-row="7" data-col="3"></td>
+                  <td data-row="7" data-col="4">0.023</td>
+                </tr>
+                <tr>
+                  <td data-row="8" data-col="1"></td>
+                  <td data-row="8" data-col="2"></td>
+                  <td data-row="8" data-col="3"></td>
+                  <td data-row="8" data-col="4">(0.106)</td>
+                </tr>
+                <tr>
+                  <td data-row="9" data-col="1">Num.Obs.</td>
+                  <td data-row="9" data-col="2">246</td>
+                  <td data-row="9" data-col="3">246</td>
+                  <td data-row="9" data-col="4">246</td>
+                </tr>
+                <tr>
+                  <td data-row="10" data-col="1">R2</td>
+                  <td data-row="10" data-col="2">0.008</td>
+                  <td data-row="10" data-col="3"></td>
+                  <td data-row="10" data-col="4"></td>
+                </tr>
+                <tr>
+                  <td data-row="11" data-col="1">R2 Adj.</td>
+                  <td data-row="11" data-col="2">0.004</td>
+                  <td data-row="11" data-col="3"></td>
+                  <td data-row="11" data-col="4"></td>
+                </tr>
+                <tr>
+                  <td data-row="12" data-col="1">RMSE</td>
+                  <td data-row="12" data-col="2">7.99</td>
+                  <td data-row="12" data-col="3">7.99</td>
+                  <td data-row="12" data-col="4">7.99</td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+<!-- hack to avoid NA insertion in last line -->
+</div>
+</div>
+<p><strong>What is happening here:</strong> The <code>lagsarlm()</code> function estimates the SAR model by including the spatially lagged outcome as a predictor, and the estimated coefficient on that lag is called rho. A significant rho means neighbors’ outcomes directly influence each unit’s outcome. The <code>errorsarlm()</code> function estimates the SEM model by allowing the residuals to follow a spatial autoregressive process, with a coefficient called lambda. A significant lambda means unobserved shocks are spatially clustered. The <code>modelsummary()</code> call lines up all three specifications side by side so you can see how the coefficient on log GDP moves as spatial dependence is accounted for.</p>
+<blockquote class="blockquote">
+<p><strong>⚠️ Common Pitfalls</strong></p>
+<ul>
+<li><strong>Ignoring the rho and lambda parameters when interpreting results.</strong> The coefficient on log GDP in the SAR model is not the total effect of GDP, because part of the effect operates indirectly through neighbors. The <code>impacts()</code> function computes the correct direct, indirect, and total marginal effects.</li>
+<li><strong>Using OLS coefficients when a spatial model is warranted.</strong> A Lagrange Multiplier test on the OLS residuals will tell you whether SAR, SEM, or both are appropriate. Skipping this step means you may be reporting biased standard errors.</li>
+<li><strong>Assuming SAR and SEM are interchangeable.</strong> The two models imply different causal stories. If neighbors’ outcomes affect yours, that is SAR. If common shocks affect both you and your neighbors, that is SEM. Let theory guide the choice.</li>
+</ul>
+</blockquote>
+</section>
+<section id="diagnostic-visualizations" class="level2">
+<h2 class="anchored" data-anchor-id="diagnostic-visualizations">5. Diagnostic Visualizations</h2>
+<p>The three figures below move from the Moran scatterplot to the geographic distribution of life expectancy to the spatial clustering of the OLS residuals. Together they tell the story of whether spatial dependence is present and how much it matters.</p>
+<section id="figure-1-moran-scatterplot" class="level3">
+<h3 class="anchored" data-anchor-id="figure-1-moran-scatterplot">Figure 1: Moran Scatterplot</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">moran.plot</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  sf_data<span class="sc">$</span>life_exp,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  spatial_weights,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">xlab =</span> <span class="st">"Life Expectancy"</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">ylab =</span> <span class="st">"Spatially Lagged Life Expectancy (W times Life Exp)"</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">main =</span> <span class="st">"Figure 1: Moran Scatterplot of Spatial Autocorrelation"</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="spatial_econometrics_files/figure-html/figure-1-moran-scatter-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>How to read this figure:</strong> The horizontal axis is life expectancy and the vertical axis is the spatially lagged life expectancy, which is the average of each unit’s neighbors. The scatterplot is divided into four quadrants by the mean lines. Points in the top right are high value units surrounded by high value units, called High High clusters. Points in the bottom left are Low Low clusters. Points in the off diagonal quadrants are spatial outliers. The slope of the regression line through the scatterplot is the Moran’s I statistic.</p>
+<p><strong>🔑 Key Takeaway:</strong> A positive slope in the Moran scatterplot is direct visual evidence of positive spatial autocorrelation. The steeper the slope, the stronger the clustering. Points far from the regression line are spatial outliers where a unit’s value diverges sharply from its neighbors.</p>
+</section>
+<section id="figure-2-geographic-distribution-map" class="level3">
+<h3 class="anchored" data-anchor-id="figure-2-geographic-distribution-map">Figure 2: Geographic Distribution Map</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>fig2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> sf_data) <span class="sc">+</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">color =</span> life_exp, <span class="at">size =</span> log_gdp), <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_viridis_c</span>(<span class="at">option =</span> <span class="st">"viridis"</span>) <span class="sc">+</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Figure 2: Geographic Spatial Distribution and Economic Intensity"</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Point color maps life expectancy; point size maps log GDP"</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"Life Exp"</span>,</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">size  =</span> <span class="st">"Log GDP"</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(fig2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="spatial_econometrics_files/figure-html/figure-2-geographic-map-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>How to read this figure:</strong> Each point represents one country in the synthetic cross section. The color of the point reflects life expectancy, with darker colors indicating higher values. The size of the point reflects log GDP, with larger points indicating higher income. If similarly colored points tend to sit near each other, that is spatial clustering. If colors are randomly distributed across the map, spatial independence is more plausible.</p>
+<p><strong>🔑 Key Takeaway:</strong> A map that shows clear regional gradients in color is evidence of spatial autocorrelation. A map that looks like random noise is evidence against it. This figure is the first diagnostic you should look at before running any formal test, because it gives you an intuitive sense of whether the spatial pattern is real.</p>
+</section>
+<section id="figure-3-ols-residual-spatial-mapping" class="level3">
+<h3 class="anchored" data-anchor-id="figure-3-ols-residual-spatial-mapping">Figure 3: OLS Residual Spatial Mapping</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>sf_data<span class="sc">$</span>residuals_ols <span class="ot">&lt;-</span> <span class="fu">residuals</span>(mod_ols)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>fig3 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> sf_data) <span class="sc">+</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">color =</span> residuals_ols), <span class="at">size =</span> <span class="dv">3</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_gradient2</span>(</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">low      =</span> <span class="st">"firebrick"</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">mid      =</span> <span class="st">"white"</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">high     =</span> <span class="st">"midnightblue"</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">midpoint =</span> <span class="dv">0</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Figure 3: Spatial Clustering of Standard OLS Residuals"</span>,</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Non random residual patterns indicate unmodeled spatial dependence"</span>,</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"OLS Residuals"</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(fig3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="spatial_econometrics_files/figure-html/figure-3-ols-residuals-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>How to read this figure:</strong> Each point is colored by the residual from the OLS regression. Blue points are observations the OLS model underpredicts, meaning actual life expectancy is higher than predicted. Red points are overpredictions. If blue and red points cluster geographically, that is evidence the OLS model is missing a spatial structure that the SAR or SEM model would capture.</p>
+<p><strong>🔑 Key Takeaway:</strong> A residuals map that shows clear geographic clustering is a red flag for OLS. The whole point of spatial econometric models is to absorb that clustering into the coefficients, rho in the SAR case or lambda in the SEM case, so that the remaining errors are independent.</p>
+</section>
+</section>
+<section id="putting-it-all-together" class="level2">
+<h2 class="anchored" data-anchor-id="putting-it-all-together">6. Putting It All Together</h2>
+<p>You now have a complete spatial econometrics workflow. You have constructed a spatial cross section, built a k nearest neighbors weight matrix, tested for global spatial autocorrelation with Moran’s I, estimated OLS, SAR, and SEM models, and visualized the spatial structure through a Moran scatterplot, a geographic map, and a residual map.</p>
+<p>The core decision rule is straightforward. Reach for <strong>Moran’s I</strong> first to confirm that spatial autocorrelation exists. If it does, run a <strong>Lagrange Multiplier test</strong> on the OLS residuals to decide between SAR, SEM, and the combined SARAR specification. Reach for the <strong>SAR model</strong> when theory suggests neighbors’ outcomes directly influence each unit’s outcome, such as in policy diffusion or trade network settings. Reach for the <strong>SEM model</strong> when theory suggests shared unobserved shocks drive spatial clustering, such as in environmental or health contagion settings. Reach for the <strong>combined SARAR model</strong> when both mechanisms are plausible.</p>
+<p>The Moran scatterplot, the geographic map, and the residuals map are your primary reporting devices. Together they tell the reader whether spatial dependence is present, where it clusters geographically, and how much of it the spatial models absorb. Spatial econometrics is one of the most powerful tools in the comparative social science toolkit for dealing with the fact that countries do not exist in isolation, and it pairs naturally with the panel data and causal inference methods you have studied elsewhere in this series.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

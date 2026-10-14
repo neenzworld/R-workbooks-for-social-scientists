@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Neena Abimbola Albarus">
+
+<title>Regression Discontinuity Design</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="regression_discontinuity_files/libs/clipboard/clipboard.min.js"></script>
+<script src="regression_discontinuity_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="regression_discontinuity_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="regression_discontinuity_files/libs/quarto-html/popper.min.js"></script>
+<script src="regression_discontinuity_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="regression_discontinuity_files/libs/quarto-html/anchor.min.js"></script>
+<link href="regression_discontinuity_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="regression_discontinuity_files/libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="regression_discontinuity_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="regression_discontinuity_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="regression_discontinuity_files/libs/bootstrap/bootstrap-c2e55264ed47ce3b2e0326a2269f9400.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#theoretical-foundations-and-methodological-overview" id="toc-theoretical-foundations-and-methodological-overview" class="nav-link active" data-scroll-target="#theoretical-foundations-and-methodological-overview">1. Theoretical Foundations and Methodological Overview</a></li>
+  <li><a href="#data-pipeline-and-sharp-rdd-running-variable-construct" id="toc-data-pipeline-and-sharp-rdd-running-variable-construct" class="nav-link" data-scroll-target="#data-pipeline-and-sharp-rdd-running-variable-construct">2. Data Pipeline and Sharp RDD Running Variable Construct</a></li>
+  <li><a href="#rdd-estimation-parametric-ols-and-non-parametric-rdrobust" id="toc-rdd-estimation-parametric-ols-and-non-parametric-rdrobust" class="nav-link" data-scroll-target="#rdd-estimation-parametric-ols-and-non-parametric-rdrobust">3. RDD Estimation: Parametric OLS and Non Parametric rdrobust</a></li>
+  <li><a href="#diagnostic-visualizations" id="toc-diagnostic-visualizations" class="nav-link" data-scroll-target="#diagnostic-visualizations">4. Diagnostic Visualizations</a>
+  <ul class="collapse">
+  <li><a href="#figure-1-non-parametric-local-polynomial-rdd-plot" id="toc-figure-1-non-parametric-local-polynomial-rdd-plot" class="nav-link" data-scroll-target="#figure-1-non-parametric-local-polynomial-rdd-plot">Figure 1: Non Parametric Local Polynomial RDD Plot</a></li>
+  <li><a href="#figure-2-parametric-regression-discontinuity-slope-and-jump" id="toc-figure-2-parametric-regression-discontinuity-slope-and-jump" class="nav-link" data-scroll-target="#figure-2-parametric-regression-discontinuity-slope-and-jump">Figure 2: Parametric Regression Discontinuity Slope and Jump</a></li>
+  <li><a href="#figure-3-mccrary-running-variable-density-test" id="toc-figure-3-mccrary-running-variable-density-test" class="nav-link" data-scroll-target="#figure-3-mccrary-running-variable-density-test">Figure 3: McCrary Running Variable Density Test</a></li>
+  </ul></li>
+  <li><a href="#putting-it-all-together" id="toc-putting-it-all-together" class="nav-link" data-scroll-target="#putting-it-all-together">5. Putting It All Together</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Regression Discontinuity Design</h1>
+<p class="subtitle lead">Sharp and Fuzzy Threshold Dynamics, Optimal Bandwidth Selection and Local Linear Regression</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Neena Abimbola Albarus </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="theoretical-foundations-and-methodological-overview" class="level2">
+<h2 class="anchored" data-anchor-id="theoretical-foundations-and-methodological-overview">1. Theoretical Foundations and Methodological Overview</h2>
+<p>Regression discontinuity design is one of the most credible quasi-experimental strategies in the social sciences. The idea is elegant. When treatment is assigned by a deterministic rule based on a continuous <strong>running variable</strong>, units just above and just below the cutoff are essentially identical in every way except for their treatment status. Comparing outcomes in a narrow window around the cutoff therefore mimics the comparison that a randomized experiment would produce, at least locally.</p>
+<p>Two flavors dominate the literature. <strong>Sharp RDD</strong> applies when treatment status is a deterministic function of the running variable, meaning every unit above the threshold receives the treatment and every unit below does not. <strong>Fuzzy RDD</strong> applies when the probability of treatment jumps at the cutoff but does not go from zero to one, such as when crossing the threshold makes a program available but not mandatory. Fuzzy designs require instrumental variables logic, with the threshold serving as the instrument.</p>
+<p>The identifying assumption is <strong>continuity</strong>. In the absence of treatment, the outcome must evolve smoothly through the cutoff. Anything that jumps discontinuously at the threshold is attributed to the treatment. In this workbook, we construct a sharp RDD in which a synthetic policy raises life expectancy by exactly 4.5 years for countries above a GDP per capita threshold of 10,000 dollars. We then estimate the effect using parametric OLS, non parametric local polynomial regression, and run the McCrary density test to check for manipulation of the running variable.</p>
+<blockquote class="blockquote">
+<p><strong>⚠️ Common Pitfalls</strong></p>
+<ul>
+<li><strong>Using a polynomial of high order in the running variable.</strong> Higher order polynomials produce noisy estimates at the boundary, which is exactly where the RDD estimate lives. Local linear regression with a data driven bandwidth is almost always preferred.</li>
+<li><strong>Ignoring the density test.</strong> If units can manipulate their position relative to the cutoff, the continuity assumption fails and the RDD estimate is not credible. The McCrary test is the standard check.</li>
+<li><strong>Reporting the RDD estimate without a bandwidth sensitivity analysis.</strong> The estimate depends on the bandwidth, and a credible analysis shows the estimate is stable across a reasonable range of bandwidths.</li>
+</ul>
+</blockquote>
+</section>
+<section id="data-pipeline-and-sharp-rdd-running-variable-construct" class="level2">
+<h2 class="anchored" data-anchor-id="data-pipeline-and-sharp-rdd-running-variable-construct">2. Data Pipeline and Sharp RDD Running Variable Construct</h2>
+<p>Before estimating anything, we locate the OWID data, filter to a single cross section, and construct a synthetic running variable, treatment indicator, and outcome. The synthetic construction lets us verify that the estimators recover the true treatment effect of 4.5 years.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Dynamic path resolution across common working directories</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>possible_paths <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"../data/life_expectancy_data.csv"</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"data/life_expectancy_data.csv"</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"../../data/life_expectancy_data.csv"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"/Users/yawdgyal/Desktop/R for github/data/life_expectancy_data.csv"</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"/Users/yawdgyal/Desktop/R for github/workbooks/data/life_expectancy_data.csv"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>data_path <span class="ot">&lt;-</span> possible_paths[<span class="fu">file.exists</span>(possible_paths)][<span class="dv">1</span>]</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is.na</span>(data_path) <span class="sc">||</span> <span class="fu">length</span>(data_path) <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stop</span>(</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Could not locate 'life_expectancy_data.csv'. "</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Searched the following paths:</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste</span>(possible_paths, <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Loading data from: "</span>, data_path)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>owid_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(data_path, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Raw column names: "</span>, <span class="fu">paste</span>(<span class="fu">names</span>(owid_raw), <span class="at">collapse =</span> <span class="st">", "</span>))</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Robust renaming that tolerates any common source format</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>rename_owid <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  nm <span class="ot">&lt;-</span> <span class="fu">names</span>(df)</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  new_names <span class="ot">&lt;-</span> nm</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  new_names[nm <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Entity"</span>, <span class="st">"entity"</span>, <span class="st">"country"</span>)] <span class="ot">&lt;-</span> <span class="st">"country"</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  new_names[nm <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Code"</span>, <span class="st">"code"</span>, <span class="st">"iso_code"</span>)]     <span class="ot">&lt;-</span> <span class="st">"code"</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  new_names[nm <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Year"</span>, <span class="st">"year"</span>)]                 <span class="ot">&lt;-</span> <span class="st">"year"</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  life_candidates <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Life expectancy"</span>, <span class="st">"life_expectancy"</span>,</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Life Expectancy"</span>, <span class="st">"life expectancy"</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>  new_names[nm <span class="sc">%in%</span> life_candidates] <span class="ot">&lt;-</span> <span class="st">"life_exp"</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(df) <span class="ot">&lt;-</span> new_names</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>  df</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>owid_df <span class="ot">&lt;-</span> <span class="fu">rename_owid</span>(owid_raw)</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Renamed column names: "</span>, <span class="fu">paste</span>(<span class="fu">names</span>(owid_df), <span class="at">collapse =</span> <span class="st">", "</span>))</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="co"># Confirm the required columns exist before proceeding</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>required_cols <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>, <span class="st">"life_exp"</span>)</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>missing_cols  <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(required_cols, <span class="fu">names</span>(owid_df))</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(missing_cols) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stop</span>(</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>    <span class="st">"The following required columns are missing after renaming: "</span>,</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste</span>(missing_cols, <span class="at">collapse =</span> <span class="st">", "</span>),</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="sc">\n</span><span class="st">Available columns: "</span>,</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste</span>(<span class="fu">names</span>(owid_df), <span class="at">collapse =</span> <span class="st">", "</span>)</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a><span class="co"># Construct the synthetic sharp RDD framework</span></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2026</span>)</span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>cutoff_val <span class="ot">&lt;-</span> <span class="dv">10000</span></span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>rdd_df <span class="ot">&lt;-</span> owid_df <span class="sc">%&gt;%</span></span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(life_exp), year <span class="sc">==</span> <span class="dv">2015</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>    <span class="at">gdp_pc       =</span> <span class="fu">pmax</span>(<span class="dv">1000</span>, <span class="fu">rnorm</span>(<span class="fu">n</span>(), <span class="at">mean =</span> <span class="dv">11000</span>, <span class="at">sd =</span> <span class="dv">6000</span>)),</span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>    <span class="at">running_x    =</span> gdp_pc <span class="sc">-</span> cutoff_val,</span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>    <span class="at">treatment_d  =</span> <span class="fu">if_else</span>(running_x <span class="sc">&gt;=</span> <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>),</span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>    <span class="at">life_exp_sim =</span> <span class="dv">55</span> <span class="sc">+</span> <span class="fl">0.0008</span> <span class="sc">*</span> running_x <span class="sc">+</span> <span class="fl">4.5</span> <span class="sc">*</span> treatment_d <span class="sc">+</span></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>                   <span class="fu">rnorm</span>(<span class="fu">n</span>(), <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="fl">2.5</span>)</span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>()</span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(rdd_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 246
+Columns: 8
+$ country      &lt;chr&gt; "Afghanistan", "Africa", "Albania", "Algeria", "American …
+$ code         &lt;chr&gt; "AFG", "OWID_AFR", "ALB", "DZA", "ASM", "AND", "AGO", "AI…
+$ year         &lt;dbl&gt; 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2015, 2015, 201…
+$ life_exp     &lt;dbl&gt; 62.2695, 60.8437, 78.3580, 75.1589, 72.6543, 84.5316, 61.…
+$ gdp_pc       &lt;dbl&gt; 14123.534, 4521.855, 11835.429, 10491.507, 7000.162, 6589…
+$ running_x    &lt;dbl&gt; 4123.53444, -5478.14457, 1835.42869, 491.50729, -2999.837…
+$ treatment_d  &lt;dbl&gt; 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, …
+$ life_exp_sim &lt;dbl&gt; 64.33163, 48.98677, 60.62264, 59.58411, 50.18837, 56.5005…</code></pre>
+</div>
+</div>
+<p><strong>What is happening here:</strong> The <code>possible_paths</code> vector lets the workbook run from multiple working directories. We read the OWID CSV, print the raw column names for diagnostics, then use a <code>rename_owid()</code> helper to standardize the column names regardless of the source format. A pre flight check verifies that <code>country</code>, <code>year</code>, and <code>life_exp</code> exist after renaming, and stops with a clear message if any are missing. We then construct three variables. <code>gdp_pc</code> is a synthetic GDP per capita drawn from a normal distribution. <code>running_x</code> is that value centered at the 10,000 dollar threshold, so the cutoff sits at zero. <code>treatment_d</code> is the treatment indicator, set to 1 for every country above the threshold. <code>life_exp_sim</code> is the outcome, built with a small linear trend in the running variable and a discrete jump of 4.5 years at the cutoff. The true causal effect in this simulation is exactly 4.5 years.</p>
+<blockquote class="blockquote">
+<p><strong>⚠️ Common Pitfalls</strong></p>
+<ul>
+<li><strong>Confusing the synthetic running variable with real GDP.</strong> The <code>gdp_pc</code> column here is generated randomly and is unrelated to the real economic conditions of the countries in the sample. The exercise is a demonstration of the workflow, not a substantive finding.</li>
+<li><strong>Forgetting to center the running variable.</strong> The RDD estimator identifies the effect at the cutoff. If the running variable is not centered, the cutoff value must be passed explicitly to every estimator. Centering at zero simplifies the code and reduces the chance of error.</li>
+<li><strong>Choosing the cutoff arbitrarily.</strong> In real applications, the threshold is a documented feature of the policy or program. If the cutoff is chosen to maximize the estimated effect, the analysis is not credible.</li>
+</ul>
+</blockquote>
+</section>
+<section id="rdd-estimation-parametric-ols-and-non-parametric-rdrobust" class="level2">
+<h2 class="anchored" data-anchor-id="rdd-estimation-parametric-ols-and-non-parametric-rdrobust">3. RDD Estimation: Parametric OLS and Non Parametric rdrobust</h2>
+<p>With the synthetic RDD in hand, we estimate the treatment effect in two ways. The parametric OLS regression fits a linear slope on each side of the cutoff plus a dummy for the treatment. The <code>rdrobust</code> function implements the Calonico, Cattaneo, and Titiunik optimal bandwidth local polynomial estimator, which is the modern standard in applied work.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parametric OLS with interaction slope</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>mod_ols_rdd <span class="ot">&lt;-</span> <span class="fu">lm</span>(life_exp_sim <span class="sc">~</span> running_x <span class="sc">*</span> treatment_d, <span class="at">data =</span> rdd_df)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">modelsummary</span>(</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="st">"Parametric RDD (OLS)"</span> <span class="ot">=</span> mod_ols_rdd),</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">stars =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">gof_omit =</span> <span class="st">"IC|Log|F"</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script>
+
+    <script>
+      // Create table-specific functions using external factory
+      const tableFns_9yz5dkcjfsmcm3home5d = TinyTable.createTableFunctions("tinytable_9yz5dkcjfsmcm3home5d");
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '12', j: 2 } ], css_id: 'tinytable_css_p8i1jze6xwpfcl4a44lt',}, 
+          { positions: [ { i: '8', j: 2 } ], css_id: 'tinytable_css_iach6nakn8xda6gra9pd',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '4', j: 2 }, { i: '5', j: 2 }, { i: '6', j: 2 }, { i: '7', j: 2 }, { i: '9', j: 2 }, { i: '10', j: 2 }, { i: '11', j: 2 } ], css_id: 'tinytable_css_dfo5d20qlbubr5yagrun',}, 
+          { positions: [ { i: '0', j: 2 } ], css_id: 'tinytable_css_pjd4p09tccd3z5n52hw7',}, 
+          { positions: [ { i: '12', j: 1 } ], css_id: 'tinytable_css_0dcfq81kvsnojtafi1ho',}, 
+          { positions: [ { i: '8', j: 1 } ], css_id: 'tinytable_css_svtsgqjz00vhr7fxycr1',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '4', j: 1 }, { i: '5', j: 1 }, { i: '6', j: 1 }, { i: '7', j: 1 }, { i: '9', j: 1 }, { i: '10', j: 1 }, { i: '11', j: 1 } ], css_id: 'tinytable_css_8w8f6qfsdyewg9gbc726',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_90y3xhwk25w4rbg0vsgk',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  tableFns_9yz5dkcjfsmcm3home5d.styleCell(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
+    <style>
+    /* tinytable css entries after */
+    #tinytable_9yz5dkcjfsmcm3home5d td.tinytable_css_p8i1jze6xwpfcl4a44lt, #tinytable_9yz5dkcjfsmcm3home5d th.tinytable_css_p8i1jze6xwpfcl4a44lt {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_9yz5dkcjfsmcm3home5d td.tinytable_css_iach6nakn8xda6gra9pd, #tinytable_9yz5dkcjfsmcm3home5d th.tinytable_css_iach6nakn8xda6gra9pd {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_9yz5dkcjfsmcm3home5d td.tinytable_css_dfo5d20qlbubr5yagrun, #tinytable_9yz5dkcjfsmcm3home5d th.tinytable_css_dfo5d20qlbubr5yagrun { text-align: center }
+    #tinytable_9yz5dkcjfsmcm3home5d td.tinytable_css_pjd4p09tccd3z5n52hw7, #tinytable_9yz5dkcjfsmcm3home5d th.tinytable_css_pjd4p09tccd3z5n52hw7 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_9yz5dkcjfsmcm3home5d td.tinytable_css_0dcfq81kvsnojtafi1ho, #tinytable_9yz5dkcjfsmcm3home5d th.tinytable_css_0dcfq81kvsnojtafi1ho {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_9yz5dkcjfsmcm3home5d td.tinytable_css_svtsgqjz00vhr7fxycr1, #tinytable_9yz5dkcjfsmcm3home5d th.tinytable_css_svtsgqjz00vhr7fxycr1 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_9yz5dkcjfsmcm3home5d td.tinytable_css_8w8f6qfsdyewg9gbc726, #tinytable_9yz5dkcjfsmcm3home5d th.tinytable_css_8w8f6qfsdyewg9gbc726 { text-align: left }
+    #tinytable_9yz5dkcjfsmcm3home5d td.tinytable_css_90y3xhwk25w4rbg0vsgk, #tinytable_9yz5dkcjfsmcm3home5d th.tinytable_css_90y3xhwk25w4rbg0vsgk {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    </style>
+    <div class="container">
+      <table class="tinytable" id="tinytable_9yz5dkcjfsmcm3home5d" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+        
+        <thead>
+              <tr>
+                <th scope="col" data-row="0" data-col="1"> </th>
+                <th scope="col" data-row="0" data-col="2">Parametric RDD (OLS)</th>
+              </tr>
+        </thead>
+        <tfoot><tr><td colspan="2">+ p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</td></tr></tfoot>
+        <tbody>
+                <tr>
+                  <td data-row="1" data-col="1">(Intercept)</td>
+                  <td data-row="1" data-col="2">55.358***</td>
+                </tr>
+                <tr>
+                  <td data-row="2" data-col="1"></td>
+                  <td data-row="2" data-col="2">(0.425)</td>
+                </tr>
+                <tr>
+                  <td data-row="3" data-col="1">running_x</td>
+                  <td data-row="3" data-col="2">0.001***</td>
+                </tr>
+                <tr>
+                  <td data-row="4" data-col="1"></td>
+                  <td data-row="4" data-col="2">(0.000)</td>
+                </tr>
+                <tr>
+                  <td data-row="5" data-col="1">treatment_d</td>
+                  <td data-row="5" data-col="2">4.373***</td>
+                </tr>
+                <tr>
+                  <td data-row="6" data-col="1"></td>
+                  <td data-row="6" data-col="2">(0.588)</td>
+                </tr>
+                <tr>
+                  <td data-row="7" data-col="1">running_x × treatment_d</td>
+                  <td data-row="7" data-col="2">-0.000</td>
+                </tr>
+                <tr>
+                  <td data-row="8" data-col="1"></td>
+                  <td data-row="8" data-col="2">(0.000)</td>
+                </tr>
+                <tr>
+                  <td data-row="9" data-col="1">Num.Obs.</td>
+                  <td data-row="9" data-col="2">246</td>
+                </tr>
+                <tr>
+                  <td data-row="10" data-col="1">R2</td>
+                  <td data-row="10" data-col="2">0.849</td>
+                </tr>
+                <tr>
+                  <td data-row="11" data-col="1">R2 Adj.</td>
+                  <td data-row="11" data-col="2">0.847</td>
+                </tr>
+                <tr>
+                  <td data-row="12" data-col="1">RMSE</td>
+                  <td data-row="12" data-col="2">2.65</td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+<!-- hack to avoid NA insertion in last line -->
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Non parametric local polynomial RDD with optimal bandwidth</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>rd_fit <span class="ot">&lt;-</span> <span class="fu">rdrobust</span>(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> rdd_df<span class="sc">$</span>life_exp_sim,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> rdd_df<span class="sc">$</span>running_x,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">c =</span> <span class="dv">0</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(rd_fit)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Call: rdrobust
+
+Sharp RD estimates using local polynomial regression.
+
+Number of Obs.                  246
+BW type                       mserd
+Kernel                   Triangular
+VCE method                       NN
+
+                               Left        Right
+Number of Obs.                  112          134
+Eff. Number of Obs.              56           42
+Order est. (p)                    1            1
+Order bias (q)                    2            2
+BW est. (h)                3142.561     3142.561
+BW bias (b)                5281.094     5281.094
+rho (h/b)                     0.595        0.595
+Unique Obs.                     105          134
+
+=====================================================================
+                   Point    Robust Inference
+                Estimate         z     P&gt;|z|      [ 95% C.I. ]       
+---------------------------------------------------------------------
+     RD Effect     4.701     2.646     0.008     [1.229 , 8.255]     
+=====================================================================</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># McCrary density test for manipulation of the running variable</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>density_test <span class="ot">&lt;-</span> <span class="fu">rddensity</span>(<span class="at">X =</span> rdd_df<span class="sc">$</span>running_x, <span class="at">c =</span> <span class="dv">0</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(density_test)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Manipulation testing using local polynomial density estimation.
+
+Number of obs =       246
+Model =               unrestricted
+Kernel =              triangular
+BW method =           estimated
+VCE method =          jackknife
+
+c = 0                 Left of c           Right of c          
+Number of obs         112                 134                 
+Eff. Number of obs    59                  60                  
+Order est. (p)        2                   2                   
+Order bias (q)        3                   3                   
+BW est. (h)           3378.403            4270.618            
+
+Method                T                   P &gt; |T|             
+Robust                -2.1264             0.0335              </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+P-values of binomial tests (H0: p=0.5).
+
+Window Length              &lt;c     &gt;=c    P&gt;|T|
+1662.527  + 1662.527       35      20    0.0581
+1853.180  + 1952.315       38      27    0.2145
+2043.833  + 2242.103       40      30    0.2820
+2234.486  + 2531.891       41      33    0.4160
+2425.139  + 2821.679       47      36    0.2723
+2615.792  + 3111.466       48      42    0.5984
+2806.444  + 3401.254       51      47    0.7620
+2997.097  + 3691.042       53      51    0.9219
+3187.750  + 3980.830       56      55    1.0000
+3378.403  + 4270.618       59      60    1.0000</code></pre>
+</div>
+</div>
+<p><strong>What is happening here:</strong> The OLS regression includes the running variable, the treatment indicator, and their interaction. The interaction term allows the slope to differ on each side of the cutoff, which is the standard way to write a linear RDD. The coefficient on <code>treatment_d</code> is the estimated jump at the cutoff. The <code>rdrobust()</code> function takes the outcome, the running variable, and the cutoff, then automatically chooses an optimal bandwidth using a data driven procedure and estimates the treatment effect using local linear regression within that bandwidth. The <code>summary()</code> output reports the conventional, bias corrected, and robust estimates with their confidence intervals. Finally, the <code>rddensity()</code> function runs the McCrary test, which checks whether the density of the running variable is continuous at the cutoff. A significant result is evidence that units manipulated their position relative to the threshold.</p>
+<blockquote class="blockquote">
+<p><strong>⚠️ Common Pitfalls</strong></p>
+<ul>
+<li><strong>Reading only the parametric OLS coefficient.</strong> The parametric estimate uses all observations, including units far from the cutoff, which introduces bias. The non parametric estimate from <code>rdrobust</code> is the preferred one in modern practice.</li>
+<li><strong>Forgetting the interaction term in the parametric model.</strong> If you run <code>lm(y ~ running_x + treatment_d)</code> without the interaction, you are forcing the slope to be identical on both sides of the cutoff, which is a strong and often unjustified restriction.</li>
+<li><strong>Interpreting the density test p value too strongly.</strong> A p value above 0.05 is consistent with continuity, but the test has low power in small samples. It cannot prove that no manipulation occurred, only that the data does not reveal it.</li>
+</ul>
+</blockquote>
+</section>
+<section id="diagnostic-visualizations" class="level2">
+<h2 class="anchored" data-anchor-id="diagnostic-visualizations">4. Diagnostic Visualizations</h2>
+<p>The three figures below show the non parametric local polynomial fit, the parametric linear fit with the discrete jump, and the McCrary density test. Together they tell the story of whether the RDD is credible and how large the treatment effect appears to be.</p>
+<section id="figure-1-non-parametric-local-polynomial-rdd-plot" class="level3">
+<h3 class="anchored" data-anchor-id="figure-1-non-parametric-local-polynomial-rdd-plot">Figure 1: Non Parametric Local Polynomial RDD Plot</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>fig1 <span class="ot">&lt;-</span> <span class="fu">rdplot</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">y       =</span> rdd_df<span class="sc">$</span>life_exp_sim,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">x       =</span> rdd_df<span class="sc">$</span>running_x,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">c       =</span> <span class="dv">0</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">title   =</span> <span class="st">"Figure 1: Non Parametric Local Polynomial RDD Plot"</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">x.label =</span> <span class="st">"Running Variable: Centered GDP per Capita (c = 0)"</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">y.label =</span> <span class="st">"Life Expectancy Outcome (Years)"</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="regression_discontinuity_files/figure-html/figure-1-rdplot-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(fig1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Call: rdplot
+
+Number of Obs.                  246
+Kernel                      Uniform
+Bin Method               mimicking variance evenly-spaced method using spacings estimators
+
+                               Left        Right
+Number of Obs.                  112          134
+Eff. Number of Obs.             112          134
+Order poly. fit (p)               4            4
+BW poly. fit (h)           9000.000    16832.244
+Number of bins scale          1.000        1.000
+Bins Selected                    14           14</code></pre>
+</div>
+</div>
+<p><strong>How to read this figure:</strong> The plot shows binned averages of the outcome on either side of the cutoff, with a smooth local polynomial fit through each side. The vertical distance between the two fitted lines exactly at the cutoff is the estimated treatment effect. A visible jump with a clean local fit on each side is the visual signature of a credible sharp RDD.</p>
+<p><strong>🔑 Key Takeaway:</strong> A visible discontinuity at the cutoff with smooth fits on both sides is the classic RDD picture. If the fits are jagged or the jump is barely visible, the estimate is likely to be noisy or small. The plot is often more informative than the coefficient table because it shows the shape of the relationship across the entire range of the running variable.</p>
+</section>
+<section id="figure-2-parametric-regression-discontinuity-slope-and-jump" class="level3">
+<h3 class="anchored" data-anchor-id="figure-2-parametric-regression-discontinuity-slope-and-jump">Figure 2: Parametric Regression Discontinuity Slope and Jump</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>fig2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  rdd_df,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> running_x, <span class="at">y =</span> life_exp_sim, <span class="at">color =</span> <span class="fu">factor</span>(treatment_d))</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.4</span>, <span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">formula =</span> y <span class="sc">~</span> x, <span class="at">se =</span> <span class="cn">TRUE</span>, <span class="at">linewidth =</span> <span class="fl">1.2</span>) <span class="sc">+</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>,</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">linewidth =</span> <span class="dv">1</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">values =</span> <span class="fu">c</span>(<span class="st">"0"</span> <span class="ot">=</span> <span class="st">"firebrick"</span>, <span class="st">"1"</span> <span class="ot">=</span> <span class="st">"midnightblue"</span>),</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Control (Below Cutoff)"</span>, <span class="st">"Treated (Above Cutoff)"</span>)</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Figure 2: Parametric Regression Discontinuity Slope and Jump at Cutoff"</span>,</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Discontinuity at x = 0 estimates local average treatment effect"</span>,</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Centered Running Variable (GDP per Capita minus 10k Threshold)"</span>,</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Life Expectancy"</span>,</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"Treatment Status"</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(fig2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="regression_discontinuity_files/figure-html/figure-2-parametric-rdd-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>How to read this figure:</strong> Each point is a country. The horizontal axis is the centered running variable, so the cutoff sits at zero. The color distinguishes treated units above the cutoff from control units below. The two regression lines fit the outcome separately on each side. The vertical distance between the endpoints of the two lines at the cutoff is the parametric estimate of the treatment effect.</p>
+<p><strong>🔑 Key Takeaway:</strong> The parametric fit is easy to read but relies on a linear functional form assumption. If the true relationship is curved, the linear fit will misstate the jump. That is why the non parametric fit in Figure 1 is the preferred visual for publication, and why the parametric version here is best used as a first pass or as a robustness check.</p>
+</section>
+<section id="figure-3-mccrary-running-variable-density-test" class="level3">
+<h3 class="anchored" data-anchor-id="figure-3-mccrary-running-variable-density-test">Figure 3: McCrary Running Variable Density Test</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>fig3 <span class="ot">&lt;-</span> <span class="fu">rdplotdensity</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">rdd   =</span> density_test,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">X     =</span> rdd_df<span class="sc">$</span>running_x,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"Figure 3: McCrary Density Continuity Test for Sorting Manipulation"</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="regression_discontinuity_files/figure-html/figure-3-mccrary-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(fig3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$Estl
+Call: lpdensity
+
+Sample size                                      112
+Polynomial order for point estimation    (p=)    2
+Order of derivative estimated            (v=)    1
+Polynomial order for confidence interval (q=)    3
+Kernel function                                  triangular
+Scaling factor                                   0.457142857142857
+Bandwidth method                                 user provided
+
+Use summary(...) to show estimates.
+
+$Estr
+Call: lpdensity
+
+Sample size                                      134
+Polynomial order for point estimation    (p=)    2
+Order of derivative estimated            (v=)    1
+Polynomial order for confidence interval (q=)    3
+Kernel function                                  triangular
+Scaling factor                                   0.546938775510204
+Bandwidth method                                 user provided
+
+Use summary(...) to show estimates.
+
+$Estplot</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="regression_discontinuity_files/figure-html/figure-3-mccrary-2.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>How to read this figure:</strong> The plot shows the estimated density of the running variable on each side of the cutoff. The solid curves are the estimated densities, and the shaded bands are their confidence intervals. The vertical dashed line marks the cutoff. If the two density curves meet smoothly at the cutoff, that is evidence against manipulation. If there is a visible jump or a suspicious gap, that is a red flag.</p>
+<p><strong>🔑 Key Takeaway:</strong> A smooth density through the cutoff is reassuring. A visible discontinuity suggests that units may have sorted themselves to one side of the threshold, which would invalidate the RDD. In policy settings where the threshold triggers a benefit, units have an obvious incentive to manipulate, so the density test should always be run and reported.</p>
+</section>
+</section>
+<section id="putting-it-all-together" class="level2">
+<h2 class="anchored" data-anchor-id="putting-it-all-together">5. Putting It All Together</h2>
+<p>You now have a complete regression discontinuity workflow. You have constructed a synthetic sharp RDD with a known effect of 4.5 years, estimated the effect using parametric OLS and non parametric local polynomial regression, run the McCrary density test, and visualized the discontinuity in three complementary figures.</p>
+<p>The core decision rule is straightforward. Reach for <strong>sharp RDD</strong> when treatment status is a deterministic function of the running variable, such as when a scholarship is awarded automatically to every student above a test score threshold. Reach for <strong>fuzzy RDD</strong> when the probability of treatment jumps at the cutoff but not from zero to one, such as when crossing the threshold makes a program available but not mandatory. Reach for <strong>non parametric local polynomial estimation with the <code>rdrobust</code> package</strong> as your primary specification, because it minimizes functional form bias. Reach for <strong>parametric OLS with a linear interaction</strong> as a robustness check and for readers who are more comfortable with regression tables.</p>
+<p>The non parametric RDD plot, the parametric slope plot, and the McCrary density test are your primary reporting devices. Together they tell the reader whether the discontinuity is visible, how large it is, and whether the running variable can be trusted. Regression discontinuity design is one of the most credible identification strategies in the social science toolkit, and it delivers its credibility through transparency about the running variable and the cutoff. Taking the density test and the bandwidth sensitivity seriously is what separates a defensible RDD from a fragile one.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

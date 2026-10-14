@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Neena Abimbola Albarus">
+
+<title>Panel Data Analysis and Fixed Effects Models</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="panel_data_analysis_files/libs/clipboard/clipboard.min.js"></script>
+<script src="panel_data_analysis_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="panel_data_analysis_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="panel_data_analysis_files/libs/quarto-html/popper.min.js"></script>
+<script src="panel_data_analysis_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="panel_data_analysis_files/libs/quarto-html/anchor.min.js"></script>
+<link href="panel_data_analysis_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="panel_data_analysis_files/libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="panel_data_analysis_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="panel_data_analysis_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="panel_data_analysis_files/libs/bootstrap/bootstrap-c2e55264ed47ce3b2e0326a2269f9400.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#theoretical-foundations-and-methodological-overview" id="toc-theoretical-foundations-and-methodological-overview" class="nav-link active" data-scroll-target="#theoretical-foundations-and-methodological-overview">1. Theoretical Foundations and Methodological Overview</a></li>
+  <li><a href="#data-pipeline-and-panel-structuring" id="toc-data-pipeline-and-panel-structuring" class="nav-link" data-scroll-target="#data-pipeline-and-panel-structuring">2. Data Pipeline and Panel Structuring</a></li>
+  <li><a href="#model-estimation-pooled-ols-versus-one-way-and-two-way-fixed-effects" id="toc-model-estimation-pooled-ols-versus-one-way-and-two-way-fixed-effects" class="nav-link" data-scroll-target="#model-estimation-pooled-ols-versus-one-way-and-two-way-fixed-effects">3. Model Estimation: Pooled OLS versus One Way and Two Way Fixed Effects</a></li>
+  <li><a href="#diagnostic-and-methodological-visualizations" id="toc-diagnostic-and-methodological-visualizations" class="nav-link" data-scroll-target="#diagnostic-and-methodological-visualizations">4. Diagnostic and Methodological Visualizations</a>
+  <ul class="collapse">
+  <li><a href="#figure-1-within-country-trajectories" id="toc-figure-1-within-country-trajectories" class="nav-link" data-scroll-target="#figure-1-within-country-trajectories">Figure 1: Within Country Trajectories</a></li>
+  <li><a href="#figure-2-model-estimate-comparisons" id="toc-figure-2-model-estimate-comparisons" class="nav-link" data-scroll-target="#figure-2-model-estimate-comparisons">Figure 2: Model Estimate Comparisons</a></li>
+  <li><a href="#figure-3-country-fixed-effects-distribution" id="toc-figure-3-country-fixed-effects-distribution" class="nav-link" data-scroll-target="#figure-3-country-fixed-effects-distribution">Figure 3: Country Fixed Effects Distribution</a></li>
+  <li><a href="#figure-4-year-fixed-effects" id="toc-figure-4-year-fixed-effects" class="nav-link" data-scroll-target="#figure-4-year-fixed-effects">Figure 4: Year Fixed Effects</a></li>
+  </ul></li>
+  <li><a href="#lab-exercises" id="toc-lab-exercises" class="nav-link" data-scroll-target="#lab-exercises">5. Lab Exercises</a>
+  <ul class="collapse">
+  <li><a href="#exercise-1-high-dimensional-fixed-effects" id="toc-exercise-1-high-dimensional-fixed-effects" class="nav-link" data-scroll-target="#exercise-1-high-dimensional-fixed-effects">Exercise 1: High Dimensional Fixed Effects</a></li>
+  <li><a href="#exercise-2-hausman-specification-test" id="toc-exercise-2-hausman-specification-test" class="nav-link" data-scroll-target="#exercise-2-hausman-specification-test">Exercise 2: Hausman Specification Test</a></li>
+  </ul></li>
+  <li><a href="#putting-it-all-together" id="toc-putting-it-all-together" class="nav-link" data-scroll-target="#putting-it-all-together">6. Putting It All Together</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Panel Data Analysis and Fixed Effects Models</h1>
+<p class="subtitle lead">Controlling for Unobserved Heterogeneity in Longitudinal Social Science Data</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Neena Abimbola Albarus </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="theoretical-foundations-and-methodological-overview" class="level2">
+<h2 class="anchored" data-anchor-id="theoretical-foundations-and-methodological-overview">1. Theoretical Foundations and Methodological Overview</h2>
+<p>Longitudinal data, where the same units are observed repeatedly across time, is the workhorse of modern social science research. Panel datasets let us ask questions that cross sections cannot answer, such as whether a change in one variable within a country over time produces a corresponding change in another variable. The central statistical challenge is <strong>unobserved heterogeneity</strong>. Countries, firms, or individuals differ in ways we cannot measure directly, and those differences may correlate with our predictors of interest, biasing the estimates from a naive pooled regression.</p>
+<p>Fixed effects models solve this problem by absorbing any time invariant unit specific differences into country specific intercepts. Two way fixed effects extend the logic further by also absorbing common time shocks, such as global pandemics or technological shifts, through year specific intercepts. What remains is the <strong>within variation</strong>, meaning the way an individual unit deviates from its own average over time, which is often the cleanest source of identification available to a comparative researcher.</p>
+<p>In this workbook, we estimate three nested specifications on the OWID life expectancy panel, compare the resulting persistence parameter across them, and visualize both the within country trajectories and the unobserved intercepts that each model absorbs.</p>
+<blockquote class="blockquote">
+<p><strong>⚠️ Common Pitfalls</strong></p>
+<ul>
+<li><strong>Assuming FE always fixes endogeneity.</strong> Fixed effects absorb time invariant confounders, but time varying confounders still bias your estimates. FE is not a substitute for thinking carefully about what varies within units over time.</li>
+<li><strong>Forgetting to cluster standard errors.</strong> Within unit errors are almost always serially correlated. Ignoring that fact inflates precision and produces anti conservative inference.</li>
+<li><strong>Reading FE coefficients as causal without a design.</strong> Fixed effects identify off within unit variation, but that variation is not automatically exogenous. Interpret FE estimates as descriptive within unit associations unless you have a credible identification strategy.</li>
+</ul>
+</blockquote>
+</section>
+<section id="data-pipeline-and-panel-structuring" class="level2">
+<h2 class="anchored" data-anchor-id="data-pipeline-and-panel-structuring">2. Data Pipeline and Panel Structuring</h2>
+<p>Before estimating any models, we need to locate the raw data on disk, standardize the column names, and engineer the lag and time trend features that will drive the analysis. Panel structure matters here because the lag operator must respect the country and year ordering, otherwise the lagged values will be silently drawn from the wrong observation.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Dynamic path resolution across common working directories</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>possible_paths <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"../data/life_expectancy_data.csv"</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"data/life_expectancy_data.csv"</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"../../data/life_expectancy_data.csv"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"/Users/yawdgyal/Desktop/R for github/data/life_expectancy_data.csv"</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"/Users/yawdgyal/Desktop/R for github/workbooks/data/life_expectancy_data.csv"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>data_path <span class="ot">&lt;-</span> possible_paths[<span class="fu">file.exists</span>(possible_paths)][<span class="dv">1</span>]</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is.na</span>(data_path) <span class="sc">||</span> <span class="fu">length</span>(data_path) <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stop</span>(</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Could not locate 'life_expectancy_data.csv'. "</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Searched the following paths:</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste</span>(possible_paths, <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Loading data from: "</span>, data_path)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>owid_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(data_path, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Standardize column names defensively</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="st">"Entity"</span> <span class="sc">%in%</span> <span class="fu">names</span>(owid_raw)) {</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  owid_panel <span class="ot">&lt;-</span> owid_raw <span class="sc">%&gt;%</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename</span>(</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">country  =</span> Entity,</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">code     =</span> Code,</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>      <span class="at">year     =</span> Year,</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>      <span class="at">life_exp =</span> <span class="st">`</span><span class="at">Life expectancy</span><span class="st">`</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>  owid_panel <span class="ot">&lt;-</span> owid_raw <span class="sc">%&gt;%</span> <span class="fu">rename_with</span>(tolower)</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Build the analysis panel with lag and time trend features</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>panel_df <span class="ot">&lt;-</span> owid_panel <span class="sc">%&gt;%</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(code), <span class="sc">!</span><span class="fu">is.na</span>(life_exp), year <span class="sc">&gt;=</span> <span class="dv">1990</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(country) <span class="sc">%&gt;%</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(year, <span class="at">.by_group =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">life_exp_lag =</span> <span class="fu">lag</span>(life_exp, <span class="dv">1</span>, <span class="at">order_by =</span> year),</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">time_trend   =</span> year <span class="sc">-</span> <span class="fu">min</span>(year)</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(life_exp, life_exp_lag)</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(panel_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 8,364
+Columns: 6
+$ country      &lt;chr&gt; "Afghanistan", "Afghanistan", "Afghanistan", "Afghanistan…
+$ code         &lt;chr&gt; "AFG", "AFG", "AFG", "AFG", "AFG", "AFG", "AFG", "AFG", "…
+$ year         &lt;dbl&gt; 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 199…
+$ life_exp     &lt;dbl&gt; 45.1183, 45.5207, 46.5691, 51.0212, 50.9689, 52.1032, 52.…
+$ life_exp_lag &lt;dbl&gt; 45.1183, 45.5207, 46.5691, 51.0212, 50.9689, 52.1032, 52.…
+$ time_trend   &lt;dbl&gt; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,…</code></pre>
+</div>
+</div>
+<p><strong>What is happening here:</strong> The <code>possible_paths</code> vector lets the workbook run from the project root, from a <code>workbooks/</code> subfolder, or from a specific machine path. We read the OWID CSV and defensively rename its columns because the source file has shifted naming conventions over time. We then filter to 1990 and later, which is a common choice in long panels because it avoids the Soviet collapse and other structural breaks that would otherwise drive the lagged coefficient. The <code>lag(life_exp, 1, order_by = year)</code> call creates the one period lagged outcome, and <code>time_trend</code> gives us a simple linear time counter that we can use for robustness checks. The scoped <code>drop_na()</code> drops only observations missing the outcome or its lag, preserving as much data as possible.</p>
+<blockquote class="blockquote">
+<p><strong>⚠️ Common Pitfalls</strong></p>
+<ul>
+<li><strong>Lags computed without an explicit ordering.</strong> <code>dplyr::lag()</code> is positional. If the data frame is not sorted by year within country, the lag quietly grabs the previous row regardless of which year it belongs to. The <code>order_by = year</code> argument protects against this, but the underlying <code>arrange()</code> call is still essential.</li>
+<li><strong>Starting the panel after a major structural break.</strong> Beginning the panel in 1990 is a modeling choice, not a neutral default. If your research question concerns the post 1990 period, that is fine. If it concerns the full century, filtering to 1990 will throw away most of your variation.</li>
+<li><strong>Dropping rows globally.</strong> <code>drop_na()</code> without a column scope wipes observations missing on any variable in the data frame. Always scope it to the columns that actually matter for the analysis.</li>
+</ul>
+</blockquote>
+</section>
+<section id="model-estimation-pooled-ols-versus-one-way-and-two-way-fixed-effects" class="level2">
+<h2 class="anchored" data-anchor-id="model-estimation-pooled-ols-versus-one-way-and-two-way-fixed-effects">3. Model Estimation: Pooled OLS versus One Way and Two Way Fixed Effects</h2>
+<p>With the panel structured, we now estimate three nested specifications. The pooled OLS ignores unit and time structure entirely and treats every observation as independent. The one way country fixed effects model absorbs any time invariant country specific differences. The two way fixed effects model adds year fixed effects to absorb common time shocks.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>mod_pooled     <span class="ot">&lt;-</span> <span class="fu">feols</span>(life_exp <span class="sc">~</span> life_exp_lag, <span class="at">data =</span> panel_df)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>mod_country_fe <span class="ot">&lt;-</span> <span class="fu">feols</span>(life_exp <span class="sc">~</span> life_exp_lag <span class="sc">|</span> country, <span class="at">data =</span> panel_df)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>mod_twfe       <span class="ot">&lt;-</span> <span class="fu">feols</span>(life_exp <span class="sc">~</span> life_exp_lag <span class="sc">|</span> country <span class="sc">+</span> year, <span class="at">data =</span> panel_df)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">modelsummary</span>(</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Pooled OLS"</span>  <span class="ot">=</span> mod_pooled,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Country FE"</span>  <span class="ot">=</span> mod_country_fe,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Two Way FE"</span>  <span class="ot">=</span> mod_twfe</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">vcov =</span> <span class="sc">~</span>country,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">stars =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">gof_omit =</span> <span class="st">"IC|Log|F"</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script>
+
+    <script>
+      // Create table-specific functions using external factory
+      const tableFns_enff67o6u7xsf0lyo3c6 = TinyTable.createTableFunctions("tinytable_enff67o6u7xsf0lyo3c6");
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '11', j: 2 }, { i: '11', j: 3 }, { i: '11', j: 4 } ], css_id: 'tinytable_css_50qd6ybi74zhj3261u2u',}, 
+          { positions: [ { i: '4', j: 2 }, { i: '4', j: 3 }, { i: '4', j: 4 } ], css_id: 'tinytable_css_5xv5jqfuc35f1zjf8b62',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '5', j: 2 }, { i: '6', j: 2 }, { i: '7', j: 2 }, { i: '8', j: 2 }, { i: '9', j: 2 }, { i: '10', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '5', j: 3 }, { i: '6', j: 3 }, { i: '7', j: 3 }, { i: '8', j: 3 }, { i: '9', j: 3 }, { i: '10', j: 3 }, { i: '1', j: 4 }, { i: '2', j: 4 }, { i: '3', j: 4 }, { i: '5', j: 4 }, { i: '6', j: 4 }, { i: '7', j: 4 }, { i: '8', j: 4 }, { i: '9', j: 4 }, { i: '10', j: 4 } ], css_id: 'tinytable_css_g8f471g9n4b1r5wbemd2',}, 
+          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 }, { i: '0', j: 4 } ], css_id: 'tinytable_css_qot2p9dyf3am97yxxxca',}, 
+          { positions: [ { i: '11', j: 1 } ], css_id: 'tinytable_css_76xfjutwgnir4a7ls3ti',}, 
+          { positions: [ { i: '4', j: 1 } ], css_id: 'tinytable_css_jxdsnig15jxs5t8azqfy',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '5', j: 1 }, { i: '6', j: 1 }, { i: '7', j: 1 }, { i: '8', j: 1 }, { i: '9', j: 1 }, { i: '10', j: 1 } ], css_id: 'tinytable_css_kyjpwgjx3vnj3m6j34cc',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_xqxmec44gynilvnhpyzx',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  tableFns_enff67o6u7xsf0lyo3c6.styleCell(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
+    <style>
+    /* tinytable css entries after */
+    #tinytable_enff67o6u7xsf0lyo3c6 td.tinytable_css_50qd6ybi74zhj3261u2u, #tinytable_enff67o6u7xsf0lyo3c6 th.tinytable_css_50qd6ybi74zhj3261u2u {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_enff67o6u7xsf0lyo3c6 td.tinytable_css_5xv5jqfuc35f1zjf8b62, #tinytable_enff67o6u7xsf0lyo3c6 th.tinytable_css_5xv5jqfuc35f1zjf8b62 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_enff67o6u7xsf0lyo3c6 td.tinytable_css_g8f471g9n4b1r5wbemd2, #tinytable_enff67o6u7xsf0lyo3c6 th.tinytable_css_g8f471g9n4b1r5wbemd2 { text-align: center }
+    #tinytable_enff67o6u7xsf0lyo3c6 td.tinytable_css_qot2p9dyf3am97yxxxca, #tinytable_enff67o6u7xsf0lyo3c6 th.tinytable_css_qot2p9dyf3am97yxxxca {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_enff67o6u7xsf0lyo3c6 td.tinytable_css_76xfjutwgnir4a7ls3ti, #tinytable_enff67o6u7xsf0lyo3c6 th.tinytable_css_76xfjutwgnir4a7ls3ti {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_enff67o6u7xsf0lyo3c6 td.tinytable_css_jxdsnig15jxs5t8azqfy, #tinytable_enff67o6u7xsf0lyo3c6 th.tinytable_css_jxdsnig15jxs5t8azqfy {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_enff67o6u7xsf0lyo3c6 td.tinytable_css_kyjpwgjx3vnj3m6j34cc, #tinytable_enff67o6u7xsf0lyo3c6 th.tinytable_css_kyjpwgjx3vnj3m6j34cc { text-align: left }
+    #tinytable_enff67o6u7xsf0lyo3c6 td.tinytable_css_xqxmec44gynilvnhpyzx, #tinytable_enff67o6u7xsf0lyo3c6 th.tinytable_css_xqxmec44gynilvnhpyzx {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    </style>
+    <div class="container">
+      <table class="tinytable" id="tinytable_enff67o6u7xsf0lyo3c6" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+        
+        <thead>
+              <tr>
+                <th scope="col" data-row="0" data-col="1"> </th>
+                <th scope="col" data-row="0" data-col="2">Pooled OLS</th>
+                <th scope="col" data-row="0" data-col="3">Country FE</th>
+                <th scope="col" data-row="0" data-col="4">Two Way FE</th>
+              </tr>
+        </thead>
+        <tfoot><tr><td colspan="4">+ p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</td></tr></tfoot>
+        <tbody>
+                <tr>
+                  <td data-row="1" data-col="1">(Intercept)</td>
+                  <td data-row="1" data-col="2">0.000***</td>
+                  <td data-row="1" data-col="3"></td>
+                  <td data-row="1" data-col="4"></td>
+                </tr>
+                <tr>
+                  <td data-row="2" data-col="1"></td>
+                  <td data-row="2" data-col="2">(0.000)</td>
+                  <td data-row="2" data-col="3"></td>
+                  <td data-row="2" data-col="4"></td>
+                </tr>
+                <tr>
+                  <td data-row="3" data-col="1">life_exp_lag</td>
+                  <td data-row="3" data-col="2">1.000***</td>
+                  <td data-row="3" data-col="3">1.000***</td>
+                  <td data-row="3" data-col="4">1.000***</td>
+                </tr>
+                <tr>
+                  <td data-row="4" data-col="1"></td>
+                  <td data-row="4" data-col="2">(0.000)</td>
+                  <td data-row="4" data-col="3">(0.000)</td>
+                  <td data-row="4" data-col="4">(0.000)</td>
+                </tr>
+                <tr>
+                  <td data-row="5" data-col="1">Num.Obs.</td>
+                  <td data-row="5" data-col="2">8364</td>
+                  <td data-row="5" data-col="3">8364</td>
+                  <td data-row="5" data-col="4">8364</td>
+                </tr>
+                <tr>
+                  <td data-row="6" data-col="1">R2</td>
+                  <td data-row="6" data-col="2">1.000</td>
+                  <td data-row="6" data-col="3">1.000</td>
+                  <td data-row="6" data-col="4">1.000</td>
+                </tr>
+                <tr>
+                  <td data-row="7" data-col="1">R2 Adj.</td>
+                  <td data-row="7" data-col="2">1.000</td>
+                  <td data-row="7" data-col="3">1.000</td>
+                  <td data-row="7" data-col="4">1.000</td>
+                </tr>
+                <tr>
+                  <td data-row="8" data-col="1">R2 Within</td>
+                  <td data-row="8" data-col="2"></td>
+                  <td data-row="8" data-col="3">1.000</td>
+                  <td data-row="8" data-col="4">1.000</td>
+                </tr>
+                <tr>
+                  <td data-row="9" data-col="1">R2 Within Adj.</td>
+                  <td data-row="9" data-col="2"></td>
+                  <td data-row="9" data-col="3">1.000</td>
+                  <td data-row="9" data-col="4">1.000</td>
+                </tr>
+                <tr>
+                  <td data-row="10" data-col="1">RMSE</td>
+                  <td data-row="10" data-col="2">0.00</td>
+                  <td data-row="10" data-col="3">0.00</td>
+                  <td data-row="10" data-col="4">0.00</td>
+                </tr>
+                <tr>
+                  <td data-row="11" data-col="1">Std.Errors</td>
+                  <td data-row="11" data-col="2">by: country</td>
+                  <td data-row="11" data-col="3">by: country</td>
+                  <td data-row="11" data-col="4">by: country</td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+<!-- hack to avoid NA insertion in last line -->
+</div>
+</div>
+<p><strong>What is happening here:</strong> The <code>feols()</code> function from the <code>fixest</code> package estimates fixed effects regressions using a within transformation that is dramatically faster than the dummy variable approach in <code>lm()</code>. The <code>|</code> operator introduces the fixed effects, so <code>life_exp ~ life_exp_lag | country</code> means regress life expectancy on its lag while absorbing country specific intercepts. <code>vcov = ~country</code> clusters standard errors at the country level, which is the appropriate correction for serial correlation within units. The <code>modelsummary()</code> call produces a side by side regression table so you can directly compare the persistence parameter across the three specifications.</p>
+<blockquote class="blockquote">
+<p><strong>⚠️ Common Pitfalls</strong></p>
+<ul>
+<li><strong>Not clustering standard errors at the unit level.</strong> Panel errors are almost always correlated within units across time. The default <code>fixest</code> standard errors assume independence and will be far too small.</li>
+<li><strong>Interpreting the coefficient without reference to the transformation.</strong> The lagged coefficient in the two way FE model represents the within country, within year association. It is not directly comparable to the pooled OLS coefficient, which reflects both within and between country variation.</li>
+<li><strong>Ignoring how many units and periods remain after filtering.</strong> If the fixed effects structure eats most of the identifying variation, the model can be very imprecise even with a large nominal sample size.</li>
+</ul>
+</blockquote>
+</section>
+<section id="diagnostic-and-methodological-visualizations" class="level2">
+<h2 class="anchored" data-anchor-id="diagnostic-and-methodological-visualizations">4. Diagnostic and Methodological Visualizations</h2>
+<p>The four figures below move from raw trajectories to model output. Figure 1 shows the within country variation that FE exploits. Figure 2 compares the persistence parameter across specifications. Figures 3 and 4 visualize the fixed effects themselves as a way to quantify unobserved heterogeneity.</p>
+<section id="figure-1-within-country-trajectories" class="level3">
+<h3 class="anchored" data-anchor-id="figure-1-within-country-trajectories">Figure 1: Within Country Trajectories</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>sample_countries <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Ghana"</span>, <span class="st">"Brazil"</span>, <span class="st">"Vietnam"</span>, <span class="st">"Norway"</span>, <span class="st">"United States"</span>, <span class="st">"Kenya"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>fig1 <span class="ot">&lt;-</span> panel_df <span class="sc">%&gt;%</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(country <span class="sc">%in%</span> sample_countries) <span class="sc">%&gt;%</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> life_exp, <span class="at">color =</span> country, <span class="at">group =</span> country)) <span class="sc">+</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">1.2</span>) <span class="sc">+</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_brewer</span>(<span class="at">palette =</span> <span class="st">"Set2"</span>) <span class="sc">+</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Figure 1: Within Country Health Trajectories Over Time (1990 to Present)"</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Country Fixed Effects Isolate Within Unit Slopes from Between Unit Baseline Levels"</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Year"</span>,</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Life Expectancy at Birth (Years)"</span>,</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"Nation"</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(fig1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="panel_data_analysis_files/figure-html/figure-1-trajectories-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>How to read this figure:</strong> Each line traces one country’s life expectancy across the available years. The vertical spread between lines at any given year captures the between country variation that pooled OLS exploits. The slope of each individual line captures the within country variation that fixed effects exploits. If those slopes look similar across countries, the within unit signal is small relative to the between unit differences.</p>
+<p><strong>🔑 Key Takeaway:</strong> Fixed effects identification comes entirely from how each country deviates from its own average, not from the differences between countries. If the lines are nearly flat, your FE estimates will be driven by tiny movements and will be imprecise.</p>
+</section>
+<section id="figure-2-model-estimate-comparisons" class="level3">
+<h3 class="anchored" data-anchor-id="figure-2-model-estimate-comparisons">Figure 2: Model Estimate Comparisons</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>coef_df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Model    =</span> <span class="fu">c</span>(<span class="st">"Pooled OLS"</span>, <span class="st">"Country FE"</span>, <span class="st">"Two Way FE"</span>),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Estimate =</span> <span class="fu">c</span>(</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coef</span>(mod_pooled)[<span class="st">"life_exp_lag"</span>],</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coef</span>(mod_country_fe)[<span class="st">"life_exp_lag"</span>],</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coef</span>(mod_twfe)[<span class="st">"life_exp_lag"</span>]</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">SE =</span> <span class="fu">c</span>(</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">se</span>(mod_pooled)[<span class="st">"life_exp_lag"</span>],</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">se</span>(mod_country_fe)[<span class="st">"life_exp_lag"</span>],</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">se</span>(mod_twfe)[<span class="st">"life_exp_lag"</span>]</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">ci_low  =</span> Estimate <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> SE,</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">ci_high =</span> Estimate <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> SE</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>fig2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(coef_df, <span class="fu">aes</span>(<span class="at">x =</span> Model, <span class="at">y =</span> Estimate, <span class="at">color =</span> Model)) <span class="sc">+</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_pointrange</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> ci_low, <span class="at">ymax =</span> ci_high), <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"gray40"</span>) <span class="sc">+</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_brewer</span>(<span class="at">palette =</span> <span class="st">"Set1"</span>) <span class="sc">+</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Figure 2: Persistence Parameter Estimate Across Panel Model Specifications"</span>,</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Clustered Standard Errors (Country Level) with 95 Percent Confidence Intervals"</span>,</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Specification Structure"</span>,</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Lagged Life Expectancy Coefficient Estimate"</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>)</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(fig2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="panel_data_analysis_files/figure-html/figure-2-coef-comparison-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>How to read this figure:</strong> Each point is the estimated persistence parameter for the lagged outcome, and the vertical bars are the 95 percent confidence intervals based on country clustered standard errors. If the three points sit at very different heights, the specification choice materially changes the substantive story, which is a strong hint that between and within variation carry different information in your data.</p>
+<p><strong>🔑 Key Takeaway:</strong> A persistence parameter that shrinks dramatically once country fixed effects are added tells you that most of the apparent autoregression in pooled OLS was coming from between country differences, not from within country dynamics. Always report all three specifications so the reader can see how the estimate moves.</p>
+</section>
+<section id="figure-3-country-fixed-effects-distribution" class="level3">
+<h3 class="anchored" data-anchor-id="figure-3-country-fixed-effects-distribution">Figure 3: Country Fixed Effects Distribution</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>fe_vals <span class="ot">&lt;-</span> <span class="fu">fixef</span>(mod_country_fe)<span class="sc">$</span>country</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>fe_df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">country =</span> <span class="fu">names</span>(fe_vals),</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha_i =</span> <span class="fu">as.numeric</span>(fe_vals)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>fig3 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(fe_df, <span class="fu">aes</span>(<span class="at">x =</span> alpha_i)) <span class="sc">+</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">bins =</span> <span class="dv">30</span>, <span class="at">fill =</span> <span class="st">"midnightblue"</span>,</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>(</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">after_stat</span>(count)),</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"firebrick"</span>, <span class="at">linewidth =</span> <span class="dv">1</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Figure 3: Distribution of Unobserved Country Specific Intercepts"</span>,</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Quantifying Baseline Heterogeneity Absorbed by Country Fixed Effects"</span>,</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Estimated Country Fixed Effect (Baseline Offset)"</span>,</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Count of Countries"</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(fig3)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="panel_data_analysis_files/figure-html/figure-3-country-fe-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>How to read this figure:</strong> Each observation is a country, and its horizontal position is the estimated country specific intercept from the one way fixed effects model. A wide spread means baseline life expectancy differs dramatically across countries once the lagged outcome is accounted for. A narrow spread means countries look very similar at baseline and the fixed effects are absorbing very little.</p>
+<p><strong>🔑 Key Takeaway:</strong> The wider the distribution of estimated country fixed effects, the more between country heterogeneity the model is absorbing and the less reason you have to trust pooled OLS. A tall, narrow distribution suggests the country FE correction is doing less work.</p>
+</section>
+<section id="figure-4-year-fixed-effects" class="level3">
+<h3 class="anchored" data-anchor-id="figure-4-year-fixed-effects">Figure 4: Year Fixed Effects</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>year_fe_vals <span class="ot">&lt;-</span> <span class="fu">fixef</span>(mod_twfe)<span class="sc">$</span>year</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>year_df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">year    =</span> <span class="fu">as.numeric</span>(<span class="fu">names</span>(year_fe_vals)),</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">gamma_t =</span> <span class="fu">as.numeric</span>(year_fe_vals)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>fig4 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(year_df, <span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> gamma_t)) <span class="sc">+</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"darkgreen"</span>, <span class="at">linewidth =</span> <span class="fl">1.1</span>) <span class="sc">+</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">color =</span> <span class="st">"darkgreen"</span>, <span class="at">size =</span> <span class="fl">2.5</span>) <span class="sc">+</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Figure 4: Global Shocks Absorbed by Year Fixed Effects"</span>,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Common Macro Dynamics Filtered Out in Two Way Fixed Effects"</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Year"</span>,</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Year Fixed Effect Coefficient Offset"</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(fig4)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="panel_data_analysis_files/figure-html/figure-4-year-fe-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>How to read this figure:</strong> Each point is the estimated year specific intercept from the two way fixed effects model. Because year fixed effects are only identified up to a normalization, the values are interpreted relative to a reference year. Sharp upward or downward movements identify years in which global conditions shifted in a way that affected every country simultaneously, such as a pandemic, an oil shock, or a widespread policy diffusion event.</p>
+<p><strong>🔑 Key Takeaway:</strong> A year fixed effects series that moves sharply is evidence that global time shocks are large enough to matter. If the year effects are flat and boring, the two way FE model is not buying you much over the one way version, and you can report the simpler specification without losing anything.</p>
+</section>
+</section>
+<section id="lab-exercises" class="level2">
+<h2 class="anchored" data-anchor-id="lab-exercises">5. Lab Exercises</h2>
+<p>The exercises below extend the core analysis in three directions. Each one is a natural next step once you are comfortable with the baseline estimates and diagnostics.</p>
+<section id="exercise-1-high-dimensional-fixed-effects" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-1-high-dimensional-fixed-effects">Exercise 1: High Dimensional Fixed Effects</h3>
+<p>The first exercise re estimates the two way FE model and prints the clustered summary directly. This is the specification you would report as your main result if the year effects turn out to matter.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>mod_ex1 <span class="ot">&lt;-</span> <span class="fu">feols</span>(life_exp <span class="sc">~</span> life_exp_lag <span class="sc">|</span> country <span class="sc">+</span> year, <span class="at">data =</span> panel_df)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(mod_ex1, <span class="at">vcov =</span> <span class="sc">~</span>country))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>OLS estimation, Dep. Var.: life_exp
+Observations: 8,364
+Fixed-effects: country: 246,  year: 34
+Standard-errors: Clustered (country) 
+             Estimate Std. Error      t value  Pr(&gt;|t|)    
+life_exp_lag        1   3.69e-17 2.707816e+16 &lt; 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 4.884e-16     Adj. R2: 1
+                  Within R2: 1</code></pre>
+</div>
+</div>
+</section>
+<section id="exercise-2-hausman-specification-test" class="level3">
+<h3 class="anchored" data-anchor-id="exercise-2-hausman-specification-test">Exercise 2: Hausman Specification Test</h3>
+<p>The Hausman test compares the fixed effects estimator with the random effects estimator. Under the null hypothesis, the random effects estimator is consistent and efficient. Under the alternative, only the fixed effects estimator is consistent. A small p value is evidence in favor of fixed effects.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>pdata <span class="ot">&lt;-</span> <span class="fu">pdata.frame</span>(panel_df, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>))</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>fe_plm <span class="ot">&lt;-</span> <span class="fu">plm</span>(life_exp <span class="sc">~</span> life_exp_lag, <span class="at">data =</span> pdata, <span class="at">model =</span> <span class="st">"within"</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>re_plm <span class="ot">&lt;-</span> <span class="fu">plm</span>(life_exp <span class="sc">~</span> life_exp_lag, <span class="at">data =</span> pdata, <span class="at">model =</span> <span class="st">"random"</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">phtest</span>(fe_plm, re_plm))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Hausman Test
+
+data:  life_exp ~ life_exp_lag
+chisq = 9540.5, df = 1, p-value &lt; 2.2e-16
+alternative hypothesis: one model is inconsistent</code></pre>
+</div>
+</div>
+<p><strong>What is happening here:</strong> The <code>plm</code> package provides a parallel implementation of panel models with a slightly different API from <code>fixest</code>. We convert the data frame into a <code>pdata.frame</code> so <code>plm</code> knows which columns identify the unit and time dimensions. The <code>within</code> model is the fixed effects estimator and the <code>random</code> model is the random effects estimator. The <code>phtest()</code> call performs the Hausman test and prints a chi squared statistic with a p value.</p>
+<blockquote class="blockquote">
+<p><strong>⚠️ Common Pitfalls</strong></p>
+<ul>
+<li><strong>Treating the Hausman test as definitive.</strong> The test has low power in small samples and can fail to reject even when random effects is inappropriate. Use it as one piece of evidence, not as the sole criterion.</li>
+<li><strong>Running the test on a model that includes time invariant regressors.</strong> Time invariant variables are absorbed entirely by the fixed effects estimator and the test cannot handle them cleanly. Drop them before running <code>phtest()</code>.</li>
+<li><strong>Forgetting to cluster in <code>plm</code>.</strong> The <code>plm</code> defaults do not cluster standard errors. If you report coefficients from <code>plm</code>, request clustered covariance explicitly through <code>coeftest()</code> with a <code>vcovHC()</code> argument.</li>
+</ul>
+</blockquote>
+</section>
+</section>
+<section id="putting-it-all-together" class="level2">
+<h2 class="anchored" data-anchor-id="putting-it-all-together">6. Putting It All Together</h2>
+<p>You now have a full panel data workflow. You have structured a longitudinal dataset, estimated three nested specifications, clustered standard errors at the appropriate level, and visualized both the raw within country variation and the fixed effects that absorb unobserved heterogeneity.</p>
+<p>The core decision rule is straightforward. Reach for <strong>pooled OLS</strong> only when you have strong reasons to believe units do not differ systematically in unmeasured ways, which is rare in comparative social science. Reach for <strong>one way country fixed effects</strong> when you want to control for any time invariant country characteristics, whether or not you can measure them. Reach for <strong>two way fixed effects</strong> when global time shocks are likely to matter, such as in any study spanning 2020 or major recessions.</p>
+<p>The specification table from Section 3 is your primary reporting device. Show all three columns side by side so the reader can see how the persistence parameter moves as you add fixed effects. Pair that table with the four figures, which together tell the story of where the identifying variation comes from and what the model is absorbing. Fixed effects are not a fix for bad identification, but they are an indispensable tool for keeping unobserved heterogeneity from contaminating your estimates.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
